@@ -74,14 +74,62 @@ app.post('/register', async (req, res) => {
 
 // Helper function to read data from the JSON file
 const readDataFromFile = () => {
-    try {
-        const data = fs.readFileSync(dataFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (err) {
-        // If file does not exist, return an empty array
-        return [];
-    }
+  try {
+    const data = fs.readFileSync(dataFilePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    // If file does not exist or cannot be read, return an empty array
+    console.error('Error reading JSON file:', err);
+    return [];
+  }
 };
+
+// Helper function to write data to the JSON file
+const writeDataToFile = (data) => {
+  try {
+    fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    console.log('Data successfully written to the file');
+  } catch (err) {
+    console.error('Error writing to JSON file:', err);
+  }
+};
+
+
+// Endpoint to register a new user
+app.post('/register', (req, res) => {
+  const { username, email, password, phone, birthDate } = req.body;
+
+  if (!username || !email || !password || !phone || !birthDate) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  // Read the existing data from the JSON file
+  const users = readDataFromFile();
+
+  // Check if the email is already registered
+  const existingUser = users.find(user => user.email === email);
+  if (existingUser) {
+    return res.status(400).json({ message: 'Email is already registered.' });
+  }
+
+  // Add the new user to the users array
+  const newUser = { username, email, password, phone, birthDate };
+  users.push(newUser);
+
+  // Write the updated users array back to the JSON file
+  writeDataToFile(users);
+
+  // Send a success response
+  res.json({ message: 'User successfully registered', user: newUser });
+});
+
+
+
+// Example Route: Fetch Data from JSON file
+app.get('/data', (req, res) => {
+  const data = readDataFromFile();
+  res.json(data); // Send the JSON data to the client
+});
 
 
 
