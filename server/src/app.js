@@ -2,16 +2,30 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
-const sql = require('mssql');  
+// const sql = require('mssql');  
 const fs = require('fs');
 const path = require('path');
+const session = require('express-session');
 
 
 const app = express();
 app.use(morgan('combined'));
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173', // Frontend URL
+    credentials: true, 
+    httpOnly: false,
+  }));
 
+// express session
+app.use(
+    session({
+      secret: 'foodtruck', 
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: false }, 
+    })
+  );
 
 // SQL 
 
@@ -35,36 +49,36 @@ app.use(cors());
 //   });
 
 // create/register a user
-app.post('/register', async (req, res) => {
-    try {
-      const { username, email, password, phone, birthDate } = req.body;
+// app.post('/register', async (req, res) => {
+//     try {
+//       const { username, email, password, phone, birthDate } = req.body;
       
-      // SQL query to insert user data into the database
-    //   const query = `
-    //     INSERT INTO Users (username, email, password, phone, birthDate) 
-    //     VALUES (@username, @email, @password, @phone, @birthDate)
-    //   `;
+//       // SQL query to insert user data into the database
+//     //   const query = `
+//     //     INSERT INTO Users (username, email, password, phone, birthDate) 
+//     //     VALUES (@username, @email, @password, @phone, @birthDate)
+//     //   `;
   
-      // Create a new SQL request and execute the query
-      const request = new sql.Request();
-      request.input('username', sql.VarChar, username);
-      request.input('email', sql.VarChar, email);
-      request.input('password', sql.VarChar, password);
-      request.input('phone', sql.VarChar, phone);
-      request.input('birthDate', sql.Date, birthDate);
-      return res.send();   
-    //   await request.query(query);
+//       // Create a new SQL request and execute the query
+//       const request = new sql.Request();
+//       request.input('username', sql.VarChar, username);
+//       request.input('email', sql.VarChar, email);
+//       request.input('password', sql.VarChar, password);
+//       request.input('phone', sql.VarChar, phone);
+//       request.input('birthDate', sql.Date, birthDate);
+//       return res.send();   
+//     //   await request.query(query);
   
-    //   res.send({
-    //     message: `User ${email} successfully registered`
-    //   });
-    } catch (error) {
-      res.status(500).send({
-        message: 'Error during registration',
-        error: error.message
-      });
-    }
-  });
+//     //   res.send({
+//     //     message: `User ${email} successfully registered`
+//     //   });
+//     } catch (error) {
+//       res.status(500).send({
+//         message: 'Error during registration',
+//         error: error.message
+//       });
+//     }
+//   });
 
 
 
@@ -72,7 +86,7 @@ app.post('/register', async (req, res) => {
 
   const dataFilePath = path.join(__dirname, '../BDD.json');
 
-// Helper function to read data from the JSON file
+// function to read data from the JSON file
 const readDataFromFile = () => {
   try {
     const data = fs.readFileSync(dataFilePath, 'utf-8');
@@ -97,6 +111,7 @@ const writeDataToFile = (data) => {
 
 // Endpoint to register a new user
 app.post('/register', (req, res) => {
+    console.log("function ok")
   const { username, email, password, phone, birthDate } = req.body;
 
   if (!username || !email || !password || !phone || !birthDate) {
@@ -124,6 +139,41 @@ app.post('/register', (req, res) => {
 });
 
 
+// Login route
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+  
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+  
+    // Read the existing data from the JSON file
+    const users = readDataFromFile();
+    const user = users.find(user => user.email === email && user.password === password);
+  
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+  
+    // If the login is successful, create a session for the user
+    req.session.user = user; 
+    req.session.save(); 
+    res.json({ message: 'Login successful', user: user });
+  });
+  
+  // Logout route
+  app.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error logging out' });
+      }
+      res.clearCookie('connect.sid'); // Clear the session cookie
+      res.json({ message: 'Logout successful' });
+    });
+  });
+  
+ 
+  
 
 // Example Route: Fetch Data from JSON file
 app.get('/data', (req, res) => {
@@ -131,7 +181,29 @@ app.get('/data', (req, res) => {
   res.json(data); // Send the JSON data to the client
 });
 
+app.get('/profile', (req, res) => {
+    if (!req.session.cookie) {
+      return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    }
+    res.json({ user: req.session.user });
+  });
+  
 
+  // Account route
+  app.get('/account', (req, res) => {
+    // Check if the user is logged in by checking if the session contains the user
+    if (!req.query.userEmail) {
+      return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    }
 
+    
+  // Read the existing data from the JSON file
+  const users = readDataFromFile();
+
+  // Check if the email is already registered
+  const existingUser = users.find(user => user.email === req.query.userEmail);
+
+  res.json(existingUser);
+  });
 
 app.listen(process.env.PORT || 8081 )

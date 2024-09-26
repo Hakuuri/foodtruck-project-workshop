@@ -1,0 +1,17 @@
+[
+  {
+    "username": "enzo122003@gmail.com",
+    "email": "enzo122003@ecoles-epsi.net",
+    "password": "dddd",
+    "phone": 613563096,
+    "birthDate": "2024-09-12",
+    "truck_id": 1
+  },
+  {
+    "username": "michel",
+    "email": "michel@ecoles-epsi.net",
+    "password": "aaaaa",
+    "phone": 5302984336,
+    "birthDate": "2024-09-19"
+  }
+]  
