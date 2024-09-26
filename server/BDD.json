@@ -13,5 +13,26 @@
     "password": "aaaaa",
     "phone": 5302984336,
     "birthDate": "2024-09-19"
+  },
+  {
+    "username": "eeee",
+    "email": "eeee@ecoles-epsi.net",
+    "password": "ffff",
+    "phone": 613563096,
+    "birthDate": "2024-09-12"
+  },
+  {
+    "username": "enzo",
+    "email": "abancourt@ecoles-epsi.net",
+    "password": "gggg",
+    "phone": 613563096,
+    "birthDate": "2024-08-29"
+  },
+  {
+    "username": "dddd",
+    "email": "enzo12003@ecoles-wiz.net",
+    "password": "dddd",
+    "phone": 6113563096,
+    "birthDate": "2024-09-05"
   }
-]  
+]

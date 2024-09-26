@@ -175,11 +175,6 @@ app.post('/login', (req, res) => {
  
   
 
-// Example Route: Fetch Data from JSON file
-app.get('/data', (req, res) => {
-  const data = readDataFromFile();
-  res.json(data); // Send the JSON data to the client
-});
 
 app.get('/profile', (req, res) => {
     if (!req.session.cookie) {
